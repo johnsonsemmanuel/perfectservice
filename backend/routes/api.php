@@ -135,8 +135,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Products — read by all staff, manage by manager
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/products/categories', [ProductController::class, 'categories']);
+    Route::get('/products/{product}', [ProductController::class, 'show']);
     Route::middleware('role:manager')->group(function () {
         Route::post('/products', [ProductController::class, 'store']);
+        // POST with _method=PUT for multipart/form-data updates
+        Route::post('/products/{product}', [ProductController::class, 'update']);
         Route::put('/products/{product}', [ProductController::class, 'update']);
         Route::delete('/products/{product}', [ProductController::class, 'destroy']);
     });

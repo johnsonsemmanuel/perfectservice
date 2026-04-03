@@ -35,22 +35,28 @@ class ProductController extends Controller
         );
     }
 
+    public function show(Product $product)
+    {
+        return response()->json($product);
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'             => 'required|string|max:255',
-            'sku'              => 'nullable|string|unique:products,sku',
-            'barcode'          => 'nullable|string|unique:products,barcode',
-            'category'         => 'nullable|string|max:100',
-            'price'            => 'required|numeric|min:0',
-            'cost_price'       => 'nullable|numeric|min:0',
-            'stock'            => 'required|integer|min:0',
-            'low_stock_alert'  => 'nullable|integer|min:0',
-            'description'      => 'nullable|string',
-            'image'            => 'nullable|image|mimes:jpeg,png,webp|max:2048',
+            'name'            => 'required|string|max:255',
+            'sku'             => 'nullable|string|unique:products,sku',
+            'barcode'         => 'nullable|string|unique:products,barcode',
+            'category'        => 'nullable|string|max:100',
+            'price'           => 'required|numeric|min:0',
+            'cost_price'      => 'nullable|numeric|min:0',
+            'stock'           => 'required|integer|min:0',
+            'low_stock_alert' => 'nullable|integer|min:0',
+            'description'     => 'nullable|string',
+            'image'           => 'nullable|image|mimes:jpeg,png,webp|max:2048',
         ]);
 
         $data['created_by'] = Auth::id();
+
         if (empty($data['sku'])) {
             $data['sku'] = Product::generateSku();
         }
@@ -60,6 +66,7 @@ class ProductController extends Controller
         }
 
         unset($data['image']);
+
         return response()->json(Product::create($data), 201);
     }
 
@@ -77,29 +84,35 @@ class ProductController extends Controller
             'description'     => 'sometimes|nullable|string',
             'is_active'       => 'sometimes|boolean',
             'image'           => 'nullable|image|mimes:jpeg,png,webp|max:2048',
-            'remove_image'    => 'sometimes|boolean',
+            'remove_image'    => 'sometimes|in:0,1,true,false',
         ]);
 
+        $shouldRemove = filter_var($data['remove_image'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
         if ($request->hasFile('image')) {
-            // Delete old image
             if ($product->image_path) {
                 Storage::disk('public')->delete($product->image_path);
             }
             $data['image_path'] = $request->file('image')->store('products', 'public');
-        } elseif (!empty($data['remove_image'])) {
-            if ($product->image_path) {
-                Storage::disk('public')->delete($product->image_path);
-            }
+        } elseif ($shouldRemove && $product->image_path) {
+            Storage::disk('public')->delete($product->image_path);
             $data['image_path'] = null;
         }
 
         unset($data['image'], $data['remove_image']);
+
         $product->update($data);
+
         return response()->json($product->fresh());
     }
 
     public function destroy(Product $product)
     {
+        // Clean up image file before soft-deleting
+        if ($product->image_path) {
+            Storage::disk('public')->delete($product->image_path);
+        }
+
         $this->auditService->log(
             AuditLog::ACTION_DELETE,
             'product',
@@ -109,7 +122,9 @@ class ProductController extends Controller
             'Product deleted',
             'warning'
         );
+
         $product->delete();
+
         return response()->json(['message' => 'Product deleted.']);
     }
 

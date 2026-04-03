@@ -50,12 +50,19 @@ function ProductModal({ product, onClose }: { product?: Product | null; onClose:
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        // Revoke previous preview URL to avoid memory leak
+        if (imagePreview && !imagePreview.startsWith('http')) {
+            URL.revokeObjectURL(imagePreview);
+        }
         setImageFile(file);
         setRemoveImage(false);
         setImagePreview(URL.createObjectURL(file));
     };
 
     const handleRemoveImage = () => {
+        if (imagePreview && !imagePreview.startsWith('http')) {
+            URL.revokeObjectURL(imagePreview);
+        }
         setImageFile(null);
         setImagePreview(null);
         setRemoveImage(true);
@@ -64,16 +71,30 @@ function ProductModal({ product, onClose }: { product?: Product | null; onClose:
     const save = useMutation({
         mutationFn: () => {
             const fd = new FormData();
-            Object.entries(form).forEach(([k, v]) => fd.append(k, v));
-            fd.append('price', String(parseFloat(form.price)));
-            fd.append('stock', String(parseInt(form.stock)));
-            fd.append('low_stock_alert', String(parseInt(form.low_stock_alert)));
-            if (imageFile) fd.append('image', imageFile);
-            if (removeImage) fd.append('remove_image', '1');
+            // Append text fields — only once, with correct types
+            fd.append('name', form.name);
+            fd.append('sku', form.sku);
+            fd.append('category', form.category);
+            fd.append('price', String(parseFloat(form.price) || 0));
+            fd.append('stock', String(parseInt(form.stock) || 0));
+            fd.append('low_stock_alert', String(parseInt(form.low_stock_alert) || 5));
+            fd.append('description', form.description);
 
-            return isEdit
-                ? api.post(`/products/${product!.id}?_method=PUT`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-                : api.post('/products', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+            if (imageFile) {
+                fd.append('image', imageFile);
+            }
+            if (removeImage) {
+                fd.append('remove_image', '1');
+            }
+
+            // For updates: POST to /products/{id} with _method=PUT in body
+            // (Laravel method spoofing via form body, not query string)
+            if (isEdit) {
+                fd.append('_method', 'PUT');
+                // Let axios set Content-Type with correct multipart boundary automatically
+                return api.post(`/products/${product!.id}`, fd);
+            }
+            return api.post('/products', fd);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['pos-products'] });
