@@ -11,11 +11,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     if (!auth.user) return null;
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50/70">
             <Sidebar />
             <main className="md:pl-[240px] min-h-screen flex flex-col">
                 <TopHeader />
-                <div className="flex-1 p-4 md:p-6 lg:p-8 w-full pb-20 md:pb-8">
+                <div className="flex-1 p-5 md:p-7 lg:p-8 w-full pb-24 md:pb-8">
                     {children}
                 </div>
             </main>
