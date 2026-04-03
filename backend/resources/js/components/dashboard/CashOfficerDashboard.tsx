@@ -3,7 +3,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { Wallet, Banknote, Smartphone, AlertCircle, FileText, ShoppingCart, ArrowUpRight } from 'lucide-react';
 
 function Section({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-    return <div className={`bg-white rounded-2xl border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.04)] ${className}`}>{children}</div>;
+    return <div className={`bg-white rounded-2xl border border-gray-200/60 shadow-sm ${className}`}>{children}</div>;
 }
 
 function SectionHeader({ title, action }: { title: string; action?: React.ReactNode }) {

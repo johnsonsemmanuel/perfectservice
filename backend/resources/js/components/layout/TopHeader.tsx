@@ -84,7 +84,7 @@ export default function TopHeader() {
     };
 
     return (
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm">
             {/* Desktop */}
             <div className="hidden md:flex items-center justify-between h-[64px] px-8">
                 {/* Page title */}

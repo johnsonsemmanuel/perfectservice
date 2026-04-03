@@ -15,7 +15,7 @@ const DONUT_COLORS = ['#dc2626', '#f97316', '#f59e0b', '#10b981', '#6366f1', '#8
 // ── Shared primitives ──────────────────────────────────────────────────────────
 
 function Section({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-    return <div className={`bg-white rounded-2xl border border-gray-100 shadow-[0_1px_4px_rgba(0,0,0,0.04)] ${className}`}>{children}</div>;
+    return <div className={`bg-white rounded-2xl border border-gray-200/60 shadow-sm ${className}`}>{children}</div>;
 }
 
 function SectionHeader({ title, action }: { title: string; action?: React.ReactNode }) {
@@ -47,8 +47,8 @@ function StatCard({
 }) {
     const isPositive = (change ?? 0) >= 0;
     return (
-        <div className={`relative bg-white rounded-2xl p-5 border transition-shadow hover:shadow-md ${
-            accent ? 'border-red-200 ring-1 ring-red-100' : 'border-gray-100'
+        <div className={`relative bg-white rounded-2xl p-5 border transition-all hover:shadow-md ${
+            accent ? 'border-red-200 ring-1 ring-red-100' : 'border-gray-200/60 shadow-sm'
         }`}>
             {accent && <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-red-500 to-red-400 rounded-t-2xl" />}
             <div className="flex items-start justify-between mb-4">
@@ -244,7 +244,7 @@ export function ManagerDashboard({ stats, user, chartRange, onRangeChange }: {
                     { label: 'POS Revenue', value: `GH₵${Number(stats?.month?.pos_revenue ?? 0).toLocaleString('en-GH', { minimumFractionDigits: 2 })}` },
                     { label: 'Month Job Cards', value: stats?.month?.job_cards ?? 0 },
                 ].map(item => (
-                    <div key={item.label} className="bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
+                    <div key={item.label} className="bg-white rounded-xl px-4 py-3 border border-gray-200/60 shadow-sm">
                         <p className="text-[11px] text-gray-400 font-medium">{item.label}</p>
                         <p className="text-[15px] font-bold text-gray-900 mt-0.5">{item.value}</p>
                     </div>
