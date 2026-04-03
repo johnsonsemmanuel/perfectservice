@@ -19,7 +19,12 @@ class DashboardController extends Controller
 {
     public function stats(Request $request): JsonResponse
     {
-        $role = Auth::user()->role?->name;
+        $user = Auth::user();
+        $role = $user->role?->name;
+
+        if (!$role) {
+            return response()->json(['message' => 'No role assigned to your account.'], 403);
+        }
 
         return match ($role) {
             'service_advisor' => $this->serviceAdvisorStats(),

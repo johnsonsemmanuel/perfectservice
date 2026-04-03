@@ -7,6 +7,8 @@ use App\Models\AuditLog;
 use App\Models\VehicleType;
 use App\Models\User;
 use App\Exceptions\PriceOutOfRangeException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * SECURITY: Authoritative pricing validation engine.
@@ -103,24 +105,35 @@ class PricingValidationService
 
     /**
      * Verify if a PIN belongs to any active Manager.
+     * Rate-limited to 5 attempts per user per 15 minutes.
      */
     private function verifyOverride(?string $pin): bool
     {
         if (empty($pin))
             return false;
 
-        // Find any manager whose PIN matches
-        // In a real high-traffic app, we might want to cache manager IDs
+        $userId = Auth::id() ?? 'guest';
+        $cacheKey = "pin_attempts_{$userId}";
+        $attempts = (int) Cache::get($cacheKey, 0);
+
+        if ($attempts >= 5) {
+            throw new \RuntimeException('Too many PIN attempts. Please wait 15 minutes before trying again.');
+        }
+
         $managers = User::whereHas('role', function ($q) {
             $q->where('name', 'manager');
         })->whereNotNull('pin')->get();
 
         foreach ($managers as $manager) {
             if ($manager->verifyPin($pin)) {
+                // Reset on success
+                Cache::forget($cacheKey);
                 return true;
             }
         }
 
+        // Increment failure count, expire after 15 minutes
+        Cache::put($cacheKey, $attempts + 1, now()->addMinutes(15));
         return false;
     }
 

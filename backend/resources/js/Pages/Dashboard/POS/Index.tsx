@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     ShoppingCart, Plus, Minus, Trash2, Receipt, Loader2, X,
     CheckCircle, Search, Package, Tag, AlertTriangle, Edit2,
-    BarChart3, DollarSign,
+    BarChart3, DollarSign, Printer,
 } from 'lucide-react';
 
 interface Product {
@@ -222,6 +222,18 @@ function TerminalTab() {
     const [lastSale, setLastSale] = useState<any>(null);
     const [error, setError] = useState('');
 
+    // Warn before navigating away with items in cart
+    useEffect(() => {
+        const handler = (e: BeforeUnloadEvent) => {
+            if (cart.length > 0) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+        window.addEventListener('beforeunload', handler);
+        return () => window.removeEventListener('beforeunload', handler);
+    }, [cart.length]);
+
     const { data } = useQuery({
         queryKey: ['pos-products', search],
         queryFn: async () => {
@@ -252,6 +264,10 @@ function TerminalTab() {
 
     const removeItem = (id: number) => setCart(prev => prev.filter(i => i.product.id !== id));
     const clearCart = () => { setCart([]); setAmountTendered(''); setDiscount('0'); setCustomerName(''); setError(''); };
+    const confirmClearCart = () => {
+        if (cart.length > 0 && !confirm('Clear all items from cart?')) return;
+        clearCart();
+    };
 
     const subtotal = cart.reduce((s, i) => s + Number(i.product.price) * i.quantity, 0);
     const discountAmt = Math.min(parseFloat(discount) || 0, subtotal);
@@ -412,7 +428,7 @@ function TerminalTab() {
                                 {error && <p className="text-xs text-red-600 bg-red-50 p-2 rounded-lg border border-red-100">{error}</p>}
 
                                 <div className="flex gap-2">
-                                    <Button variant="outline" onClick={clearCart} className="flex-1 text-gray-500">Clear</Button>
+                                    <Button variant="outline" onClick={confirmClearCart} className="flex-1 text-gray-500">Clear</Button>
                                     <Button onClick={() => checkout.mutate()} disabled={!canCheckout || checkout.isPending} className="flex-1">
                                         {checkout.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <DollarSign className="w-4 h-4 mr-1" />}
                                         Charge
@@ -449,7 +465,12 @@ function TerminalTab() {
                             <div className="flex justify-between font-bold text-green-700"><span>Change</span><span>GH₵{Number(lastSale.change_given).toFixed(2)}</span></div>
                             <div className="flex justify-between"><span className="text-gray-500">Items</span><span className="font-medium">{lastSale.items?.length} line(s)</span></div>
                         </div>
-                        <Button onClick={() => setShowReceipt(false)} className="w-full">New Sale</Button>
+                        <div className="flex gap-2">
+                            <Button variant="outline" onClick={() => window.print()} className="flex-1">
+                                <Printer className="w-4 h-4 mr-2" /> Print
+                            </Button>
+                            <Button onClick={() => setShowReceipt(false)} className="flex-1">New Sale</Button>
+                        </div>
                     </div>
                 </div>
             )}

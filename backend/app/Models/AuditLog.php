@@ -73,4 +73,5 @@ class AuditLog extends Model
     public const ACTION_DISCOUNT_REJECTED = 'discount_rejected';
     public const ACTION_LOGIN = 'user_login';
     public const ACTION_LOGOUT = 'user_logout';
+    public const ACTION_DELETE = 'record_deleted';
 }

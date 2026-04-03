@@ -1,7 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useAuth } from '@/hooks/useAuth';
 import { Search, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 
@@ -20,10 +20,10 @@ const pageTitles: Record<string, string> = {
 
 function useDebounce(value: string, delay: number) {
     const [debounced, setDebounced] = useState(value);
-    useState(() => {
+    useEffect(() => {
         const t = setTimeout(() => setDebounced(value), delay);
         return () => clearTimeout(t);
-    });
+    }, [value, delay]);
     return debounced;
 }
 
@@ -76,6 +76,7 @@ export default function TopHeader() {
                     <div className="relative z-50">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
                         <input
+                            aria-label="Search job cards, customers, invoices"
                             placeholder="Search..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -89,9 +90,11 @@ export default function TopHeader() {
                                     {isLoading ? (
                                         <div className="p-4 text-center text-gray-500 text-xs">Searching...</div>
                                     ) : results.length > 0 ? (
-                                        <div className="max-h-[300px] overflow-y-auto">
+                                        <div role="listbox" aria-label="Search results" className="max-h-[300px] overflow-y-auto">
                                             {results.map((result: any) => (
                                                 <Link key={`${result.type}-${result.id}`} href={result.url}
+                                                    role="option"
+                                                    aria-selected="false"
                                                     onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }}
                                                     className="flex items-center gap-3 p-3 hover:bg-gray-50 border-b border-gray-50 last:border-0">
                                                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${result.type === 'job_card' ? 'bg-blue-50 text-blue-600' : result.type === 'customer' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>
@@ -105,7 +108,7 @@ export default function TopHeader() {
                                             ))}
                                         </div>
                                     ) : (
-                                        <div className="p-4 text-center text-gray-500 text-xs">No results found</div>
+                                        <div role="status" className="p-4 text-center text-gray-500 text-xs">No results found</div>
                                     )}
                                 </div>
                             </>

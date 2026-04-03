@@ -52,6 +52,7 @@ export default function Sidebar() {
                         <Link
                             key={link.href}
                             href={link.href}
+                            aria-current={active ? 'page' : undefined}
                             className={cn(
                                 'flex items-center px-3 py-2.5 text-[13px] font-medium rounded-xl transition-all duration-200 group',
                                 active ? 'bg-red-600 text-white' : 'text-gray-400 hover:bg-white/10 hover:text-white'
@@ -76,6 +77,7 @@ export default function Sidebar() {
                 </div>
                 <button
                     onClick={() => logout.mutate()}
+                    aria-label="Logout"
                     className="flex w-full items-center px-3 py-2 text-[13px] font-medium text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
                 >
                     <LogOut className="mr-3 h-[18px] w-[18px]" />

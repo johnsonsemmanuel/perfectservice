@@ -28,7 +28,10 @@ class CheckRole
         }
 
         if (!$user->role) {
-            return response()->json(['message' => 'No role assigned.'], 403);
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'No role assigned.'], 403);
+            }
+            return redirect('/dashboard');
         }
 
         if (!in_array($user->role->name, $roles)) {
@@ -38,9 +41,14 @@ class CheckRole
                 'route'
             );
 
-            return response()->json([
-                'message' => 'You do not have permission to perform this action.',
-            ], 403);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'You do not have permission to perform this action.',
+                ], 403);
+            }
+
+            // For Inertia/web requests, redirect back to dashboard
+            return redirect('/dashboard');
         }
 
         return $next($request);

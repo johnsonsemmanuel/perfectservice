@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\Service;
+use App\Services\AuditService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ServiceController extends Controller
 {
+    public function __construct(private AuditService $auditService) {}
     public function index(Request $request): JsonResponse
     {
         $query = Service::query();
@@ -61,7 +64,7 @@ class ServiceController extends Controller
             'name' => 'sometimes|string|max:255',
             'category' => 'sometimes|string|max:255',
             'min_price' => 'sometimes|numeric|min:0',
-            'max_price' => 'sometimes|numeric',
+            'max_price' => 'sometimes|numeric|gte:min_price',
             'fixed_price' => 'nullable|numeric|min:0',
             'is_fixed' => 'boolean',
             'is_active' => 'boolean',
@@ -80,7 +83,16 @@ class ServiceController extends Controller
 
     public function destroy(Service $service): JsonResponse
     {
-        $service->delete(); // Soft delete
+        $this->auditService->log(
+            AuditLog::ACTION_DELETE,
+            'service',
+            $service->id,
+            ['name' => $service->name, 'category' => $service->category],
+            null,
+            'Service soft-deleted',
+            'warning'
+        );
+        $service->delete();
 
         return response()->json(['message' => 'Service deactivated.']);
     }

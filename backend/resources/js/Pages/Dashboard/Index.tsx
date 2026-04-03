@@ -13,7 +13,7 @@ export default function DashboardIndex() {
     const { user } = useAuth();
     const [chartRange, setChartRange] = useState<7 | 30>(7);
 
-    const { data: stats, isLoading } = useQuery({
+    const { data: stats, isLoading, isError } = useQuery({
         queryKey: ['dashboard-stats', chartRange],
         queryFn: async () => {
             const res = await api.get('/dashboard/stats', {
@@ -22,11 +22,17 @@ export default function DashboardIndex() {
             return res.data;
         },
         enabled: !!user,
-        refetchInterval: 60_000, // auto-refresh every minute
+        refetchInterval: 60_000,
+        refetchIntervalInBackground: false,
     });
 
     const content = () => {
         if (isLoading || !stats) return <DashboardSkeleton />;
+        if (isError) return (
+            <div role="alert" className="flex items-center justify-center h-64 text-red-500 text-sm">
+                Failed to load dashboard data. Please refresh the page.
+            </div>
+        );
         if (user?.role === 'service_advisor') return <ServiceAdvisorDashboard stats={stats} user={user} />;
         if (user?.role === 'cash_officer')    return <CashOfficerDashboard stats={stats} user={user} />;
         if (user?.role === 'technician')      return <TechnicianDashboard stats={stats} user={user} />;

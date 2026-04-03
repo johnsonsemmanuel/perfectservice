@@ -50,6 +50,7 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('Dashboard/Index');
     })->name('dashboard');
 
+    // Job Cards — service advisors, managers, technicians (read); create/edit restricted by API
     Route::get('/dashboard/job-cards', function () {
         return Inertia::render('Dashboard/JobCards/Index');
     })->name('job-cards.index');
@@ -57,50 +58,58 @@ Route::middleware('auth')->group(function () {
     // IMPORTANT: /create must come before /{id}
     Route::get('/dashboard/job-cards/create', function () {
         return Inertia::render('Dashboard/JobCards/Create');
-    })->name('job-cards.create');
+    })->name('job-cards.create')->middleware('role:service_advisor,manager');
 
     Route::get('/dashboard/job-cards/{id}', function ($id) {
         return Inertia::render('Dashboard/JobCards/Show', ['id' => $id]);
     })->name('job-cards.show');
 
+    // Customers — all except technician
     Route::get('/dashboard/customers', function () {
         return Inertia::render('Dashboard/Customers/Index');
-    })->name('customers.index');
+    })->name('customers.index')->middleware('role:manager,service_advisor,cash_officer');
 
-    Route::get('/dashboard/invoices', function () {
-        return Inertia::render('Dashboard/Invoices/Index');
-    })->name('invoices.index');
+    // Invoices — cash officers and managers
+    Route::middleware('role:cash_officer,manager')->group(function () {
+        Route::get('/dashboard/invoices', function () {
+            return Inertia::render('Dashboard/Invoices/Index');
+        })->name('invoices.index');
 
-    Route::get('/dashboard/invoices/create', function () {
-        return Inertia::render('Dashboard/Invoices/Create');
-    })->name('invoices.create');
+        Route::get('/dashboard/invoices/create', function () {
+            return Inertia::render('Dashboard/Invoices/Create');
+        })->name('invoices.create');
 
-    Route::get('/dashboard/invoices/{id}', function ($id) {
-        return Inertia::render('Dashboard/Invoices/Show', ['id' => $id]);
-    })->name('invoices.show');
+        Route::get('/dashboard/invoices/{id}', function ($id) {
+            return Inertia::render('Dashboard/Invoices/Show', ['id' => $id]);
+        })->name('invoices.show');
+    });
 
-    Route::get('/dashboard/services', function () {
-        return Inertia::render('Dashboard/Services/Index');
-    })->name('services.index');
-
-    Route::get('/dashboard/daily-closing', function () {
-        return Inertia::render('Dashboard/DailyClosing/Index');
-    })->name('daily-closing.index');
-
-    Route::get('/dashboard/audit-logs', function () {
-        return Inertia::render('Dashboard/AuditLogs/Index');
-    })->name('audit-logs.index');
-
-    Route::get('/dashboard/staff', function () {
-        return Inertia::render('Dashboard/Staff/Index');
-    })->name('staff.index');
-
-    Route::get('/dashboard/settings', function () {
-        return Inertia::render('Dashboard/Settings/Index');
-    })->name('settings.index');
-
-    // POS — direct sale terminal
+    // POS — all except technician
     Route::get('/dashboard/pos', function () {
         return Inertia::render('Dashboard/POS/Index');
-    })->name('pos.index');
+    })->name('pos.index')->middleware('role:manager,cash_officer,service_advisor');
+
+    // Manager-only pages
+    Route::middleware('role:manager')->group(function () {
+        Route::get('/dashboard/services', function () {
+            return Inertia::render('Dashboard/Services/Index');
+        })->name('services.index');
+
+        Route::get('/dashboard/audit-logs', function () {
+            return Inertia::render('Dashboard/AuditLogs/Index');
+        })->name('audit-logs.index');
+
+        Route::get('/dashboard/staff', function () {
+            return Inertia::render('Dashboard/Staff/Index');
+        })->name('staff.index');
+
+        Route::get('/dashboard/settings', function () {
+            return Inertia::render('Dashboard/Settings/Index');
+        })->name('settings.index');
+    });
+
+    // Daily Closing — cash officers and managers
+    Route::get('/dashboard/daily-closing', function () {
+        return Inertia::render('Dashboard/DailyClosing/Index');
+    })->name('daily-closing.index')->middleware('role:cash_officer,manager');
 });

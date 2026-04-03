@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\AuditLog;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
+    public function __construct(private AuditService $auditService) {}
     public function index(Request $request)
     {
         $query = Product::where('is_active', true);
@@ -74,6 +77,15 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        $this->auditService->log(
+            AuditLog::ACTION_DELETE,
+            'product',
+            $product->id,
+            ['name' => $product->name, 'sku' => $product->sku, 'stock' => $product->stock],
+            null,
+            'Product deleted',
+            'warning'
+        );
         $product->delete();
         return response()->json(['message' => 'Product deleted.']);
     }
