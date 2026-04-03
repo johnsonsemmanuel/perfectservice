@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap');
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -12,38 +12,72 @@
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --color-primary: #dc2626;
     --color-primary-foreground: #ffffff;
-    --color-page-bg: #eef0f4;
 }
 
 @layer base {
-    * {
-        box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
     body {
         font-family: var(--font-sans);
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        background-color: #eef0f4;
+        background-color: #eaecf0;
     }
-    /* Smooth scrollbar */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
-    ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 }
 
 @layer utilities {
-    .bg-page { background-color: #eef0f4; }
+    .bg-page { background-color: #eaecf0; }
 }
 
-@keyframes slide-in {
+/* ── Entry animations ─────────────────────────────────────────── */
+@keyframes fade-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up 0.3s ease-out both; }
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+.animate-fade-in { animation: fade-in 0.25s ease-out both; }
+
+@keyframes slide-in-right {
     from { opacity: 0; transform: translateX(100%); }
     to   { opacity: 1; transform: translateX(0); }
 }
-.animate-slide-in { animation: slide-in 0.2s ease-out; }
+.animate-slide-in { animation: slide-in-right 0.22s ease-out both; }
 
-@keyframes fade-up {
-    from { opacity: 0; transform: translateY(6px); }
-    to   { opacity: 1; transform: translateY(0); }
+@keyframes scale-in {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
 }
-.animate-fade-up { animation: fade-up 0.2s ease-out; }
+.animate-scale-in { animation: scale-in 0.2s ease-out both; }
+
+/* ── Stagger delays ───────────────────────────────────────────── */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.10s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.20s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.30s; }
+
+/* ── Premium card hover ───────────────────────────────────────── */
+.card-hover {
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+/* ── Button press feel ────────────────────────────────────────── */
+.btn-press {
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.btn-press:hover  { transform: translateY(-1px); }
+.btn-press:active { transform: translateY(0) scale(0.97); }
+

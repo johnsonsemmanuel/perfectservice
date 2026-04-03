@@ -56,7 +56,7 @@ export default function CreateInvoice() {
 
     return (
         <DashboardLayout>
-            <div className="max-w-2xl mx-auto space-y-6">
+            <div className="space-y-6">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="sm" onClick={() => window.history.back()} className="pl-0">
                         <ArrowLeft className="w-4 h-4 mr-2" /> Back

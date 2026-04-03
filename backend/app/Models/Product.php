@@ -14,8 +14,10 @@ class Product extends Model
     protected $fillable = [
         'name', 'sku', 'barcode', 'category',
         'price', 'cost_price', 'stock', 'low_stock_alert',
-        'description', 'is_active', 'created_by',
+        'description', 'image_path', 'is_active', 'created_by',
     ];
+
+    protected $appends = ['image_url'];
 
     protected function casts(): array
     {
@@ -25,6 +27,13 @@ class Product extends Model
             'stock'      => 'integer',
             'is_active'  => 'boolean',
         ];
+    }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        return $this->image_path
+            ? asset('storage/' . $this->image_path)
+            : null;
     }
 
     public function creator(): BelongsTo

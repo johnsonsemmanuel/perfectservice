@@ -71,7 +71,7 @@ export default function DailyClosingPage() {
     if (!closing) {
         return (
         <DashboardLayout>
-            <div className="max-w-2xl mx-auto mt-8">
+            <div className="mt-8">
                 <Card className="border-gray-100 shadow-sm overflow-hidden">
                     <CardContent className="p-12 flex flex-col items-center text-center space-y-6">
                         <div className="w-20 h-20 rounded-3xl bg-red-50 flex items-center justify-center border border-red-100">

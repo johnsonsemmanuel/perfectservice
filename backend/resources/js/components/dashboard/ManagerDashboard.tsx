@@ -47,8 +47,8 @@ function StatCard({
 }) {
     const isPositive = (change ?? 0) >= 0;
     return (
-        <div className={`relative bg-white rounded-2xl p-5 border transition-all hover:shadow-md ${
-            accent ? 'border-red-200 ring-1 ring-red-100' : 'border-gray-200/60 shadow-sm'
+        <div className={`relative bg-white rounded-2xl p-5 border transition-all duration-200 card-hover ${
+            accent ? 'border-red-200 ring-1 ring-red-100 shadow-sm' : 'border-gray-200/60 shadow-sm'
         }`}>
             {accent && <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-red-500 to-red-400 rounded-t-2xl" />}
             <div className="flex items-start justify-between mb-4">
@@ -205,35 +205,43 @@ export function ManagerDashboard({ stats, user, chartRange, onRangeChange }: {
 
             {/* ── KPI row ─────────────────────────────────────────── */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard
-                    title="Today's Revenue"
-                    value={`GH₵${Number(stats?.today?.revenue ?? 0).toLocaleString('en-GH', { minimumFractionDigits: 2 })}`}
-                    sub={`Service GH₵${Number(stats?.today?.service_revenue ?? 0).toFixed(2)} · POS GH₵${Number(stats?.today?.pos_revenue ?? 0).toFixed(2)}`}
-                    icon={Wallet} accent
-                    iconBg="bg-red-50" iconColor="text-red-600"
-                    change={stats?.today?.revenue_change}
-                />
-                <StatCard
-                    title="Outstanding Balance"
-                    value={`GH₵${Number(stats?.outstanding?.balance ?? 0).toLocaleString('en-GH', { minimumFractionDigits: 2 })}`}
-                    sub={`${stats?.outstanding?.open_job_cards ?? 0} open job cards`}
-                    icon={AlertTriangle}
-                    iconBg="bg-amber-50" iconColor="text-amber-600"
-                />
-                <StatCard
-                    title="Jobs Today"
-                    value={stats?.today?.job_cards ?? 0}
-                    sub={`${stats?.today?.invoices ?? 0} invoices issued`}
-                    icon={Car}
-                    iconBg="bg-blue-50" iconColor="text-blue-600"
-                />
-                <StatCard
-                    title="POS Sales Today"
-                    value={stats?.today?.pos_sales ?? 0}
-                    sub={`GH₵${Number(stats?.today?.pos_revenue ?? 0).toFixed(2)} retail`}
-                    icon={ShoppingCart}
-                    iconBg="bg-violet-50" iconColor="text-violet-600"
-                />
+                <div className="animate-fade-up stagger-1">
+                    <StatCard
+                        title="Today's Revenue"
+                        value={`GH₵${Number(stats?.today?.revenue ?? 0).toLocaleString('en-GH', { minimumFractionDigits: 2 })}`}
+                        sub={`Service GH₵${Number(stats?.today?.service_revenue ?? 0).toFixed(2)} · POS GH₵${Number(stats?.today?.pos_revenue ?? 0).toFixed(2)}`}
+                        icon={Wallet} accent
+                        iconBg="bg-red-50" iconColor="text-red-600"
+                        change={stats?.today?.revenue_change}
+                    />
+                </div>
+                <div className="animate-fade-up stagger-2">
+                    <StatCard
+                        title="Outstanding Balance"
+                        value={`GH₵${Number(stats?.outstanding?.balance ?? 0).toLocaleString('en-GH', { minimumFractionDigits: 2 })}`}
+                        sub={`${stats?.outstanding?.open_job_cards ?? 0} open job cards`}
+                        icon={AlertTriangle}
+                        iconBg="bg-amber-50" iconColor="text-amber-600"
+                    />
+                </div>
+                <div className="animate-fade-up stagger-3">
+                    <StatCard
+                        title="Jobs Today"
+                        value={stats?.today?.job_cards ?? 0}
+                        sub={`${stats?.today?.invoices ?? 0} invoices issued`}
+                        icon={Car}
+                        iconBg="bg-blue-50" iconColor="text-blue-600"
+                    />
+                </div>
+                <div className="animate-fade-up stagger-4">
+                    <StatCard
+                        title="POS Sales Today"
+                        value={stats?.today?.pos_sales ?? 0}
+                        sub={`GH₵${Number(stats?.today?.pos_revenue ?? 0).toFixed(2)} retail`}
+                        icon={ShoppingCart}
+                        iconBg="bg-violet-50" iconColor="text-violet-600"
+                    />
+                </div>
             </div>
 
             {/* ── Month summary strip ──────────────────────────────── */}
@@ -252,7 +260,7 @@ export function ManagerDashboard({ stats, user, chartRange, onRangeChange }: {
             </div>
 
             {/* ── Charts row ──────────────────────────────────────── */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 animate-fade-up stagger-3">
                 {/* Revenue bar chart */}
                 <Section className="lg:col-span-2">
                     <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
@@ -337,7 +345,7 @@ export function ManagerDashboard({ stats, user, chartRange, onRangeChange }: {
             </div>
 
             {/* ── Bottom row ──────────────────────────────────────── */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 animate-fade-up stagger-4">
                 {/* Staff leaderboard */}
                 <Section>
                     <SectionHeader title="Staff Performance" />

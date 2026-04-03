@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -46,6 +47,7 @@ class ProductController extends Controller
             'stock'            => 'required|integer|min:0',
             'low_stock_alert'  => 'nullable|integer|min:0',
             'description'      => 'nullable|string',
+            'image'            => 'nullable|image|mimes:jpeg,png,webp|max:2048',
         ]);
 
         $data['created_by'] = Auth::id();
@@ -53,6 +55,11 @@ class ProductController extends Controller
             $data['sku'] = Product::generateSku();
         }
 
+        if ($request->hasFile('image')) {
+            $data['image_path'] = $request->file('image')->store('products', 'public');
+        }
+
+        unset($data['image']);
         return response()->json(Product::create($data), 201);
     }
 
@@ -69,10 +76,26 @@ class ProductController extends Controller
             'low_stock_alert' => 'sometimes|integer|min:0',
             'description'     => 'sometimes|nullable|string',
             'is_active'       => 'sometimes|boolean',
+            'image'           => 'nullable|image|mimes:jpeg,png,webp|max:2048',
+            'remove_image'    => 'sometimes|boolean',
         ]);
 
+        if ($request->hasFile('image')) {
+            // Delete old image
+            if ($product->image_path) {
+                Storage::disk('public')->delete($product->image_path);
+            }
+            $data['image_path'] = $request->file('image')->store('products', 'public');
+        } elseif (!empty($data['remove_image'])) {
+            if ($product->image_path) {
+                Storage::disk('public')->delete($product->image_path);
+            }
+            $data['image_path'] = null;
+        }
+
+        unset($data['image'], $data['remove_image']);
         $product->update($data);
-        return response()->json($product);
+        return response()->json($product->fresh());
     }
 
     public function destroy(Product $product)
