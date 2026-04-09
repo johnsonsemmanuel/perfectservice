@@ -70,7 +70,11 @@ export default function ServicesPage() {
     });
 
     if (isLoading) {
-        return <TableSkeleton columns={6} rows={10} />;
+        return (
+            <DashboardLayout>
+                <TableSkeleton columns={6} rows={10} />
+            </DashboardLayout>
+        );
     }
 
     const startEdit = (service: any) => {
@@ -94,7 +98,11 @@ export default function ServicesPage() {
 
     // If not manager, show access denied or redirect (though sidebar hides link)
     if (user && user.role !== 'manager') {
-        return <div className="p-8 text-center text-red-500">Access Denied. Manager only.</div>;
+        return (
+            <DashboardLayout>
+                <div className="p-8 text-center text-red-500">Access Denied. Manager only.</div>
+            </DashboardLayout>
+        );
     }
 
     return (

@@ -127,8 +127,16 @@ export default function SettingsPage() {
         }
     };
 
-    if (isLoading) return <SettingsSkeleton />;
-    if (user && user.role !== 'manager') return <div className="p-8 text-center text-red-500">Access Denied.</div>;
+    if (isLoading) return (
+        <DashboardLayout>
+            <SettingsSkeleton />
+        </DashboardLayout>
+    );
+    if (user && user.role !== 'manager') return (
+        <DashboardLayout>
+            <div className="p-8 text-center text-red-500">Access Denied.</div>
+        </DashboardLayout>
+    );
 
     const navItems = [
         { id: 'company', label: 'Company Profile', icon: Building2 },

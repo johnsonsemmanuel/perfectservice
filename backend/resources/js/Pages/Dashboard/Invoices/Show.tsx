@@ -93,8 +93,16 @@ export default function InvoiceDetailPage() {
         });
     };
 
-    if (isLoading) return <DetailSkeleton />;
-    if (!invoice) return <div className="p-8 text-center text-red-500">Invoice not found.</div>;
+    if (isLoading) return (
+        <DashboardLayout>
+            <DetailSkeleton />
+        </DashboardLayout>
+    );
+    if (!invoice) return (
+        <DashboardLayout>
+            <div className="p-8 text-center text-red-500">Invoice not found.</div>
+        </DashboardLayout>
+    );
 
     const getStatusBadgeVariant = (status: string) => {
         switch (status) {
