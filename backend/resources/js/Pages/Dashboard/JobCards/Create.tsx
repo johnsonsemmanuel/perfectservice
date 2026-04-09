@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from '@inertiajs/react';
 import api from '@/lib/axios';
@@ -11,15 +11,26 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Plus, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 
+// ── Debounce hook ──────────────────────────────────────────────────────────────
+function useDebounce(value: string, delay: number) {
+    const [debounced, setDebounced] = useState(value);
+    useEffect(() => {
+        const t = setTimeout(() => setDebounced(value), delay);
+        return () => clearTimeout(t);
+    }, [value, delay]);
+    return debounced;
+}
+
 // ── Customer search dropdown ───────────────────────────────────────────────────
 function CustomerSearch({ search, onSelect }: { search: string; onSelect: (c: any) => void }) {
+    const debouncedSearch = useDebounce(search, 350);
     const { data, isLoading } = useQuery({
-        queryKey: ['customer-search', search],
+        queryKey: ['customer-search', debouncedSearch],
         queryFn: async () => {
-            const res = await api.get('/customers', { params: { search } });
+            const res = await api.get('/customers', { params: { search: debouncedSearch } });
             return res.data;
         },
-        enabled: search.length > 2,
+        enabled: debouncedSearch.length > 2,
     });
 
     const customers = data?.data ?? [];
@@ -49,13 +60,19 @@ export default function CreateJobCard() {
     const { toast } = useToast();
     const [error, setError] = useState('');
 
+    // Pre-fill from query params (e.g. coming from customer profile)
+    const urlParams = new URLSearchParams(window.location.search);
+    const preCustomerId = urlParams.get('customer_id') ?? '';
+    const preCustomerName = urlParams.get('customer_name') ?? '';
+    const preCustomerPhone = urlParams.get('customer_phone') ?? '';
+
     const [form, setForm] = useState({
         vehicle_number: '',
         vehicle_make: '',
         vehicle_model: '',
-        customer_id: '',
-        customer_name: '',
-        customer_phone: '',
+        customer_id: preCustomerId,
+        customer_name: preCustomerName,
+        customer_phone: preCustomerPhone,
         customer_email: '',
         technician: '',
         notes: '',

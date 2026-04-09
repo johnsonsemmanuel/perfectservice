@@ -308,7 +308,7 @@ export default function CustomerShowPage() {
                             <h2 className="text-[13px] font-semibold text-gray-900 flex items-center gap-2">
                                 <ClipboardList className="w-4 h-4 text-gray-400" /> Service History
                             </h2>
-                            <Link href={`/dashboard/job-cards/create`}
+                            <Link href={`/dashboard/job-cards/create?customer_id=${customer.id}&customer_name=${encodeURIComponent(customer.name)}&customer_phone=${encodeURIComponent(customer.phone ?? '')}`}
                                 className="inline-flex items-center gap-1 text-[12px] font-medium text-red-600 hover:text-red-700">
                                 <Plus className="w-3.5 h-3.5" /> New Job
                             </Link>

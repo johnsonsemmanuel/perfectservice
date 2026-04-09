@@ -6,10 +6,12 @@ import { useToast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
 
 export default function CreateInvoice() {
     const queryClient = useQueryClient();
     const { toast } = useToast();
+    const [confirmed, setConfirmed] = useState(false);
 
     // job_card_id comes from query string — Inertia passes it via usePage props or we read from URL
     const url = new URL(window.location.href);
@@ -121,13 +123,19 @@ export default function CreateInvoice() {
 
                         <div className="flex justify-end gap-3">
                             <Button variant="outline" onClick={() => window.history.back()}>Cancel</Button>
-                            <Button onClick={() => createInvoice.mutate()} disabled={createInvoice.isPending} className="min-w-36">
-                                {createInvoice.isPending
-                                    ? <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                    : <CheckCircle className="w-4 h-4 mr-2" />
-                                }
-                                Issue Invoice
-                            </Button>
+                            {!confirmed ? (
+                                <Button onClick={() => setConfirmed(true)} className="min-w-36">
+                                    <CheckCircle className="w-4 h-4 mr-2" /> Review & Confirm
+                                </Button>
+                            ) : (
+                                <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2">
+                                    <span className="text-sm text-amber-800 font-medium">Issue invoice for GH₵{subtotal.toFixed(2)}?</span>
+                                    <Button size="sm" variant="outline" onClick={() => setConfirmed(false)}>No</Button>
+                                    <Button size="sm" onClick={() => createInvoice.mutate()} disabled={createInvoice.isPending} className="bg-red-600 hover:bg-red-700 text-white">
+                                        {createInvoice.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null} Yes, Issue
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     </CardContent>
                 </Card>

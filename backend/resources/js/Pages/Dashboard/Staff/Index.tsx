@@ -26,7 +26,7 @@ export default function StaffPage() {
         is_active: true
     });
 
-    const { data: users, isLoading } = useQuery({
+    const { data: users, isLoading, isError } = useQuery({
         queryKey: ['users'],
         queryFn: async () => {
             const res = await api.get('/users');
@@ -121,6 +121,7 @@ export default function StaffPage() {
     };
 
     if (isLoading) return <DashboardLayout><div className="p-8 text-center text-gray-500">Loading staff...</div></DashboardLayout>;
+    if (isError) return <DashboardLayout><div className="flex flex-col items-center justify-center py-24 text-center"><p className="font-semibold text-gray-900">Failed to load staff</p><p className="text-sm text-gray-400 mt-1">Check your connection and try refreshing.</p></div></DashboardLayout>;
 
     const selectedRole = roles?.find((r: any) => r.id.toString() === formData.role_id);
 
@@ -142,13 +143,13 @@ export default function StaffPage() {
                 <CardContent className="p-0">
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left">
-                            <thead className="bg-black text-white uppercase tracking-wider text-[10px] font-bold">
+                            <thead className="bg-[#f8fafc] text-gray-600 font-medium border-b border-gray-100">
                                 <tr>
-                                    <th className="py-4 px-6">Name</th>
-                                    <th className="py-4 px-6">Email</th>
-                                    <th className="py-4 px-6">Role</th>
-                                    <th className="py-4 px-6">Status</th>
-                                    <th className="py-4 px-6 text-right">Actions</th>
+                                    <th className="py-4 px-6 text-xs uppercase tracking-wide">Name</th>
+                                    <th className="py-4 px-6 text-xs uppercase tracking-wide">Email</th>
+                                    <th className="py-4 px-6 text-xs uppercase tracking-wide">Role</th>
+                                    <th className="py-4 px-6 text-xs uppercase tracking-wide">Status</th>
+                                    <th className="py-4 px-6 text-xs uppercase tracking-wide text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -252,8 +253,9 @@ export default function StaffPage() {
                                             type="password"
                                             value={formData.password}
                                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                            placeholder={editingUser ? '••••' : 'Password'}
+                                            placeholder={editingUser ? 'Leave blank to keep' : 'Min 8 chars + number'}
                                         />
+                                        {!editingUser && <p className="text-[10px] text-gray-400">Min 8 characters, must include a number</p>}
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-extrabold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">

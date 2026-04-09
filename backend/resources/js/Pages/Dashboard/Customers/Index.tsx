@@ -240,6 +240,7 @@ export default function CustomersPage() {
                                     <th className="px-6 py-4 whitespace-nowrap">Name</th>
                                     <th className="px-6 py-4 whitespace-nowrap">Contact</th>
                                     <th className="px-6 py-4 whitespace-nowrap">Location</th>
+                                    <th className="px-6 py-4 whitespace-nowrap text-center">Jobs</th>
                                     <th className="px-6 py-4 text-right whitespace-nowrap">Action</th>
                                 </tr>
                             </thead>
@@ -307,6 +308,9 @@ export default function CustomersPage() {
                                                 ) : (
                                                     <span className="text-gray-400 italic text-xs">-</span>
                                                 )}
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <span className="text-sm font-semibold text-gray-700">{customer.job_cards_count ?? 0}</span>
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <Link href={`/dashboard/customers/${customer.id}`}>

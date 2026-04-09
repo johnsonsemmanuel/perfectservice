@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, ArrowLeft, CheckCircle, FileText, Printer, Calendar, User, Phone, Car, MessageSquare, Edit2, Save, X } from 'lucide-react';
 import { Link, usePage } from '@inertiajs/react';
+import { useToast } from '@/components/ui/toast';
 
 import { DetailSkeleton } from '@/components/dashboard/DetailSkeleton';
 
@@ -19,11 +20,12 @@ export default function JobCardDetailPage() {
     const queryClient = useQueryClient();
     const { id } = usePage().props as any;
     const { user } = useAuth();
+    const { toast } = useToast();
     const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
     const [isEditingFeedback, setIsEditingFeedback] = useState(false);
     const [feedbackText, setFeedbackText] = useState('');
 
-    const { data: job, isLoading } = useQuery({
+    const { data: job, isLoading, isError } = useQuery({
         queryKey: ['job-card', id],
         queryFn: async () => {
             const res = await api.get(`/job-cards/${id}`);
@@ -52,6 +54,7 @@ export default function JobCardDetailPage() {
     });
 
     if (isLoading) return <DashboardLayout><DetailSkeleton /></DashboardLayout>;
+    if (isError) return <DashboardLayout><div className="flex flex-col items-center justify-center py-24 text-center"><p className="font-semibold text-gray-900">Failed to load job card</p><p className="text-sm text-gray-400 mt-1">Check your connection and try refreshing.</p></div></DashboardLayout>;
     if (!job) return <DashboardLayout><div className="p-8 text-center text-red-500">Job card not found.</div></DashboardLayout>;
 
     const getStatusBadgeVariant = (status: string) => {
@@ -101,7 +104,7 @@ export default function JobCardDetailPage() {
                                 link.remove();
                             } catch (error) {
                                 console.error('Failed to download PDF', error);
-                                alert('Failed to download PDF');
+                                toast('error', 'Download failed', 'Could not download the PDF. Try again.');
                             } finally {
                                 setIsDownloadingPdf(false);
                             }
@@ -253,7 +256,13 @@ export default function JobCardDetailPage() {
                     <CardContent className="space-y-3">
                         <div className="flex justify-between text-sm py-1 border-b border-gray-50 last:border-0">
                             <span className="text-gray-500">Name</span>
-                            <span className="font-medium">{job.customer?.name || job.customer_name}</span>
+                            {job.customer?.id ? (
+                                <Link href={`/dashboard/customers/${job.customer.id}`} className="font-medium text-red-600 hover:underline">
+                                    {job.customer.name}
+                                </Link>
+                            ) : (
+                                <span className="font-medium">{job.customer_name}</span>
+                            )}
                         </div>
                         <div className="flex justify-between text-sm py-1 border-b border-gray-50 last:border-0">
                             <span className="text-gray-500">Phone</span>

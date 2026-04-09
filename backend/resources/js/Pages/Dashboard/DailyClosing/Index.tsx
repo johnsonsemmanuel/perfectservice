@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, AlertTriangle, CheckCircle, Lock, DollarSign } from 'lucide-react';
+import { Loader2, AlertTriangle, CheckCircle, Lock, DollarSign, History } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/toast';
 
@@ -17,10 +17,20 @@ import { DetailSkeleton } from '@/components/dashboard/DetailSkeleton';
 export default function DailyClosingPage() {
     const { toast } = useToast();
     const queryClient = useQueryClient();
+    const [activeTab, setActiveTab] = useState<'today' | 'history'>('today');
     const [actualCash, setActualCash] = useState('');
     const [actualMoMo, setActualMoMo] = useState('');
     const [note, setNote] = useState('');
     const [error, setError] = useState('');
+
+    const { data: historyData } = useQuery({
+        queryKey: ['daily-closings-history'],
+        queryFn: async () => {
+            const res = await api.get('/daily-closings?per_page=30');
+            return res.data;
+        },
+        enabled: activeTab === 'history',
+    });
 
     const { data: closing, isLoading, isError } = useQuery({
         queryKey: ['daily-closing', 'today'],
@@ -119,7 +129,61 @@ export default function DailyClosingPage() {
     return (
         <DashboardLayout>
         <div className="w-full space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            {/* Tab switcher */}
+            <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit mb-2">
+                {([['today', 'Today'], ['history', 'History']] as const).map(([t, label]) => (
+                    <button key={t} onClick={() => setActiveTab(t)}
+                        className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === t ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                        {t === 'history' && <History className="w-3.5 h-3.5" />}
+                        {label}
+                    </button>
+                ))}
+            </div>
+
+            {activeTab === 'history' && (
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-100">
+                        <h2 className="text-[13px] font-semibold text-gray-900">Closing History</h2>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-[13px]">
+                            <thead>
+                                <tr>
+                                    {['Date', 'Expected', 'Actual', 'Discrepancy', 'Status'].map((h, i) => (
+                                        <th key={h} className={`py-2.5 px-4 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wide border-b border-gray-100 ${i === 0 ? 'pl-6' : ''} ${i === 4 ? 'pr-6' : ''}`}>{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {historyData?.data?.map((c: any) => (
+                                    <tr key={c.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60 transition-colors">
+                                        <td className="py-3 pl-6 pr-4 font-medium text-gray-900">{new Date(c.closing_date).toLocaleDateString()}</td>
+                                        <td className="py-3 px-4 text-gray-600">GH₵{parseFloat(c.expected_total || '0').toFixed(2)}</td>
+                                        <td className="py-3 px-4 text-gray-600">GH₵{(parseFloat(c.actual_cash || '0') + parseFloat(c.actual_momo || '0')).toFixed(2)}</td>
+                                        <td className="py-3 px-4">
+                                            {c.discrepancy != null && parseFloat(c.discrepancy) !== 0 ? (
+                                                <span className={`text-[12px] font-semibold ${parseFloat(c.discrepancy) > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                                    {parseFloat(c.discrepancy) > 0 ? '+' : ''}GH₵{parseFloat(c.discrepancy).toFixed(2)}
+                                                </span>
+                                            ) : <span className="text-gray-300 text-[12px]">—</span>}
+                                        </td>
+                                        <td className="py-3 px-4 pr-6">
+                                            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full capitalize ${c.status === 'closed' ? 'bg-emerald-50 text-emerald-700' : c.status === 'flagged' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-600'}`}>
+                                                {c.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {!historyData?.data?.length && (
+                                    <tr><td colSpan={5} className="py-10 text-center text-[13px] text-gray-400">No closing history yet</td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'today' && <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Daily Reconciliation</h1>
                     <p className="text-gray-500 text-sm mt-1">Review system totals and confirm physical balances</p>
@@ -319,6 +383,7 @@ export default function DailyClosingPage() {
                 </form>
             )}
         </div>
+            </div>}
         </DashboardLayout>
     );
 }
