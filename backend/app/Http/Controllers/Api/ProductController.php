@@ -137,4 +137,45 @@ class ProductController extends Controller
             ->values();
         return response()->json($cats);
     }
+
+    /**
+     * Get stock movement history for a product.
+     */
+    public function movements(Product $product)
+    {
+        $movements = $product->stockMovements()
+            ->with('creator:id,name')
+            ->orderByDesc('created_at')
+            ->paginate(30);
+
+        return response()->json($movements);
+    }
+
+    /**
+     * Record a manual stock adjustment (receive stock, correction, etc.)
+     */
+    public function adjust(Request $request, Product $product)
+    {
+        $data = $request->validate([
+            'type'      => 'required|in:in,adjustment',
+            'quantity'  => 'required|integer|min:1',
+            'notes'     => 'nullable|string|max:500',
+        ]);
+
+        // For 'adjustment' type, quantity can be negative (correction)
+        $qty = $data['type'] === 'adjustment'
+            ? $request->integer('quantity') * ($request->boolean('subtract') ? -1 : 1)
+            : $request->integer('quantity');
+
+        if ($product->stock + $qty < 0) {
+            return response()->json(['message' => 'Adjustment would result in negative stock.'], 422);
+        }
+
+        $movement = $product->recordMovement($data['type'], $qty, null, $data['notes'] ?? null);
+
+        return response()->json([
+            'movement' => $movement,
+            'product'  => $product->fresh(),
+        ]);
+    }
 }

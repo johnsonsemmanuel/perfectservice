@@ -69,6 +69,10 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('Dashboard/Customers/Index');
     })->name('customers.index')->middleware('role:manager,service_advisor,cash_officer');
 
+    Route::get('/dashboard/customers/{id}', function ($id) {
+        return Inertia::render('Dashboard/Customers/Show', ['id' => $id]);
+    })->name('customers.show')->middleware('role:manager,service_advisor,cash_officer');
+
     // Invoices — cash officers and managers
     Route::middleware('role:cash_officer,manager')->group(function () {
         Route::get('/dashboard/invoices', function () {

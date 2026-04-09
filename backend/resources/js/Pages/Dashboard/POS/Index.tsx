@@ -12,6 +12,7 @@ import {
     ShoppingCart, Plus, Minus, Trash2, Receipt, Loader2, X,
     CheckCircle, Search, Package, Tag, AlertTriangle, Edit2,
     BarChart3, DollarSign, Printer, Upload, Image as ImageIcon,
+    ArrowDownToLine, History,
 } from 'lucide-react';
 
 interface Product {
@@ -27,6 +28,130 @@ interface Product {
 }
 
 interface CartItem { product: Product; quantity: number; }
+
+// ─── Stock Adjust Modal ────────────────────────────────────────────────────────
+function StockAdjustModal({ product, onClose }: { product: Product; onClose: () => void }) {
+    const queryClient = useQueryClient();
+    const { toast } = useToast();
+    const [qty, setQty] = useState('1');
+    const [notes, setNotes] = useState('');
+    const [tab, setTab] = useState<'in' | 'history'>('in');
+
+    const { data: movementsData } = useQuery({
+        queryKey: ['stock-movements', product.id],
+        queryFn: async () => {
+            const res = await api.get(`/products/${product.id}/movements`);
+            return res.data;
+        },
+        enabled: tab === 'history',
+    });
+
+    const adjust = useMutation({
+        mutationFn: () => api.post(`/products/${product.id}/adjust`, {
+            type: 'in',
+            quantity: parseInt(qty),
+            notes,
+        }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['pos-products'] });
+            queryClient.invalidateQueries({ queryKey: ['stock-movements', product.id] });
+            toast('success', 'Stock updated', `Added ${qty} units to ${product.name}`);
+            setQty('1');
+            setNotes('');
+        },
+        onError: (e: any) => toast('error', 'Failed', e.response?.data?.message ?? 'Try again'),
+    });
+
+    const typeLabel: Record<string, { label: string; color: string }> = {
+        in:         { label: 'Stock In',    color: 'text-emerald-600' },
+        out:        { label: 'Stock Out',   color: 'text-red-600' },
+        sale:       { label: 'POS Sale',    color: 'text-red-500' },
+        adjustment: { label: 'Adjustment', color: 'text-amber-600' },
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+                <div className="flex items-center justify-between p-5 border-b border-gray-100">
+                    <div>
+                        <h3 className="font-bold text-gray-900">{product.name}</h3>
+                        <p className="text-[12px] text-gray-400 mt-0.5">Current stock: <span className="font-semibold text-gray-700">{product.stock}</span></p>
+                    </div>
+                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                        <X className="w-4 h-4 text-gray-500" />
+                    </button>
+                </div>
+
+                {/* Tabs */}
+                <div className="flex border-b border-gray-100">
+                    {(['in', 'history'] as const).map(t => (
+                        <button key={t} onClick={() => setTab(t)}
+                            className={`flex-1 py-2.5 text-[13px] font-medium transition-colors ${tab === t ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-400 hover:text-gray-600'}`}>
+                            {t === 'in' ? 'Add Stock' : 'Movement History'}
+                        </button>
+                    ))}
+                </div>
+
+                {tab === 'in' && (
+                    <div className="p-5 space-y-4">
+                        <div className="space-y-1.5">
+                            <Label>Quantity to Add *</Label>
+                            <Input type="number" min="1" value={qty}
+                                onChange={e => setQty(e.target.value)}
+                                className="h-10 text-lg font-bold text-center" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label>Notes (optional)</Label>
+                            <Input value={notes} onChange={e => setNotes(e.target.value)}
+                                placeholder="e.g. Received from supplier" className="h-10" />
+                        </div>
+                        <div className="flex gap-3 pt-1">
+                            <Button variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
+                            <Button onClick={() => adjust.mutate()} disabled={adjust.isPending || !qty || parseInt(qty) < 1} className="flex-1">
+                                {adjust.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ArrowDownToLine className="w-4 h-4 mr-2" />}
+                                Add Stock
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
+                {tab === 'history' && (
+                    <div className="max-h-80 overflow-y-auto">
+                        {!movementsData?.data?.length ? (
+                            <div className="py-10 text-center text-[13px] text-gray-400">No movement history yet</div>
+                        ) : (
+                            <div className="divide-y divide-gray-50">
+                                {movementsData.data.map((m: any) => {
+                                    const t = typeLabel[m.type] ?? { label: m.type, color: 'text-gray-500' };
+                                    return (
+                                        <div key={m.id} className="px-5 py-3 flex items-center justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`text-[12px] font-semibold ${t.color}`}>{t.label}</span>
+                                                    {m.reference && <span className="text-[11px] text-gray-400 font-mono">{m.reference}</span>}
+                                                </div>
+                                                <p className="text-[11px] text-gray-400 mt-0.5">
+                                                    {m.creator?.name ?? 'System'} · {new Date(m.created_at).toLocaleString()}
+                                                </p>
+                                                {m.notes && <p className="text-[11px] text-gray-500 italic mt-0.5">{m.notes}</p>}
+                                            </div>
+                                            <div className="text-right shrink-0">
+                                                <p className={`text-[14px] font-bold ${m.quantity > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                                    {m.quantity > 0 ? '+' : ''}{m.quantity}
+                                                </p>
+                                                <p className="text-[10px] text-gray-400">{m.stock_before} → {m.stock_after}</p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
 
 // ─── Product Form Modal ────────────────────────────────────────────────────────
 function ProductModal({ product, onClose }: { product?: Product | null; onClose: () => void }) {
@@ -222,6 +347,7 @@ function ProductsTab() {
     const queryClient = useQueryClient();
     const [search, setSearch] = useState('');
     const [modalProduct, setModalProduct] = useState<Product | null | undefined>(undefined); // undefined = closed
+    const [stockProduct, setStockProduct] = useState<Product | null>(null);
 
     const { data, isLoading } = useQuery({
         queryKey: ['pos-products', search],
@@ -293,6 +419,10 @@ function ProductsTab() {
                                                 className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition-colors">
                                                 <Edit2 className="w-3.5 h-3.5" />
                                             </button>
+                                            <button onClick={() => setStockProduct(p)} aria-label="Adjust stock"
+                                                className="p-1.5 rounded-lg hover:bg-emerald-50 text-gray-400 hover:text-emerald-600 transition-colors">
+                                                <ArrowDownToLine className="w-3.5 h-3.5" />
+                                            </button>
                                             <button onClick={() => confirm('Delete this product?') && deleteProd.mutate(p.id)}
                                                 aria-label="Delete product"
                                                 className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors">
@@ -319,6 +449,9 @@ function ProductsTab() {
 
             {modalProduct !== undefined && (
                 <ProductModal product={modalProduct} onClose={() => setModalProduct(undefined)} />
+            )}
+            {stockProduct && (
+                <StockAdjustModal product={stockProduct} onClose={() => setStockProduct(null)} />
             )}
         </div>
     );
@@ -568,31 +701,82 @@ function TerminalTab() {
             {/* Receipt modal */}
             {showReceipt && lastSale && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4">
-                        <div className="flex items-center justify-between">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+                        {/* Screen header — hidden on print */}
+                        <div className="flex items-center justify-between p-4 border-b border-gray-100 print:hidden">
                             <div className="flex items-center gap-2">
                                 <CheckCircle className="w-5 h-5 text-green-600" />
-                                <h3 className="font-bold text-gray-900">Sale Complete!</h3>
+                                <h3 className="font-bold text-gray-900">Sale Complete</h3>
                             </div>
                             <button onClick={() => setShowReceipt(false)} className="p-1 rounded-lg hover:bg-gray-100">
                                 <X className="w-4 h-4 text-gray-500" />
                             </button>
                         </div>
-                        <div className="bg-green-50 rounded-xl p-4 text-center border border-green-100">
-                            <p className="text-2xl font-bold text-green-700">GH₵{Number(lastSale.total).toFixed(2)}</p>
-                            <p className="text-sm text-green-600 mt-1">{lastSale.receipt_number}</p>
-                        </div>
-                        <div className="space-y-2 text-sm">
+
+                        {/* Thermal receipt — this is what prints */}
+                        <div id="thermal-receipt" className="p-5 space-y-3 font-mono text-sm">
+                            <div className="receipt-center receipt-bold receipt-large text-center font-bold text-base">
+                                PerfectService POS
+                            </div>
+                            <div className="receipt-center text-center text-xs text-gray-500">
+                                {new Date(lastSale.created_at ?? Date.now()).toLocaleString()}
+                            </div>
+                            <div className="receipt-center text-center text-xs font-mono text-gray-600">
+                                {lastSale.receipt_number}
+                            </div>
+
+                            <div className="border-t border-dashed border-gray-300 my-2" />
+
                             {lastSale.customer_name && (
-                                <div className="flex justify-between"><span className="text-gray-500">Customer</span><span className="font-medium">{lastSale.customer_name}</span></div>
+                                <div className="text-xs text-gray-600">Customer: {lastSale.customer_name}</div>
                             )}
-                            <div className="flex justify-between"><span className="text-gray-500">Cash received</span><span className="font-medium">GH₵{Number(lastSale.amount_tendered).toFixed(2)}</span></div>
-                            <div className="flex justify-between font-bold text-green-700"><span>Change</span><span>GH₵{Number(lastSale.change_given).toFixed(2)}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Items</span><span className="font-medium">{lastSale.items?.length} line(s)</span></div>
+
+                            {/* Line items */}
+                            <div className="space-y-1">
+                                {lastSale.items?.map((item: any) => (
+                                    <div key={item.id} className="flex justify-between text-xs">
+                                        <span className="flex-1 truncate pr-2">{item.product_name}</span>
+                                        <span className="shrink-0 text-gray-500 mr-2">x{item.quantity}</span>
+                                        <span className="shrink-0 font-semibold">GH₵{Number(item.line_total).toFixed(2)}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="border-t border-dashed border-gray-300 my-2" />
+
+                            <div className="space-y-1 text-xs">
+                                <div className="flex justify-between">
+                                    <span className="text-gray-500">Subtotal</span>
+                                    <span>GH₵{Number(lastSale.subtotal ?? lastSale.total).toFixed(2)}</span>
+                                </div>
+                                {Number(lastSale.discount) > 0 && (
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500">Discount</span>
+                                        <span>-GH₵{Number(lastSale.discount).toFixed(2)}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between font-bold text-sm pt-1 border-t border-gray-200">
+                                    <span>TOTAL</span>
+                                    <span>GH₵{Number(lastSale.total).toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-500">Cash</span>
+                                    <span>GH₵{Number(lastSale.amount_tendered).toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between font-semibold text-green-700">
+                                    <span>Change</span>
+                                    <span>GH₵{Number(lastSale.change_given).toFixed(2)}</span>
+                                </div>
+                            </div>
+
+                            <div className="border-t border-dashed border-gray-300 my-2" />
+                            <div className="text-center text-xs text-gray-400">Thank you for your business!</div>
                         </div>
-                        <div className="flex gap-2">
+
+                        {/* Actions — hidden on print */}
+                        <div className="flex gap-2 p-4 pt-0 print:hidden">
                             <Button variant="outline" onClick={() => window.print()} className="flex-1">
-                                <Printer className="w-4 h-4 mr-2" /> Print
+                                <Printer className="w-4 h-4 mr-2" /> Print Receipt
                             </Button>
                             <Button onClick={() => setShowReceipt(false)} className="flex-1">New Sale</Button>
                         </div>

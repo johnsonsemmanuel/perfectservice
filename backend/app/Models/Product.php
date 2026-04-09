@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
@@ -45,6 +46,36 @@ class Product extends Model
     public function saleItems(): HasMany
     {
         return $this->hasMany(PosSaleItem::class);
+    }
+
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
+    /**
+     * Record a stock movement and update the stock count atomically.
+     */
+    public function recordMovement(
+        string $type,
+        int $quantity,
+        ?string $reference = null,
+        ?string $notes = null
+    ): StockMovement {
+        $before = $this->stock;
+        $after  = $before + $quantity;
+
+        $this->update(['stock' => $after]);
+
+        return $this->stockMovements()->create([
+            'created_by'   => Auth::id(),
+            'type'         => $type,
+            'quantity'     => $quantity,
+            'stock_before' => $before,
+            'stock_after'  => $after,
+            'reference'    => $reference,
+            'notes'        => $notes,
+        ]);
     }
 
     public function isLowStock(): bool

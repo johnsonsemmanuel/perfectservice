@@ -113,7 +113,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:manager,service_advisor')->group(function () {
         Route::post('/customers', [CustomerController::class, 'store']);
         Route::put('/customers/{customer}', [CustomerController::class, 'update']);
-        // Delete: Manager only
+        Route::post('/customers/{customer}/vehicles', [CustomerController::class, 'storeVehicle']);
+        Route::put('/customers/{customer}/vehicles/{vehicle}', [CustomerController::class, 'updateVehicle']);
+        Route::delete('/customers/{customer}/vehicles/{vehicle}', [CustomerController::class, 'destroyVehicle']);
     });
     Route::middleware('role:manager')->group(function () {
         Route::delete('/customers/{customer}', [CustomerController::class, 'destroy']);
@@ -137,11 +139,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/products/categories', [ProductController::class, 'categories']);
     Route::get('/products/{product}', [ProductController::class, 'show']);
+    Route::get('/products/{product}/movements', [ProductController::class, 'movements']);
     Route::middleware('role:manager')->group(function () {
         Route::post('/products', [ProductController::class, 'store']);
-        // POST with _method=PUT for multipart/form-data updates
         Route::post('/products/{product}', [ProductController::class, 'update']);
         Route::put('/products/{product}', [ProductController::class, 'update']);
+        Route::post('/products/{product}/adjust', [ProductController::class, 'adjust']);
         Route::delete('/products/{product}', [ProductController::class, 'destroy']);
     });
 

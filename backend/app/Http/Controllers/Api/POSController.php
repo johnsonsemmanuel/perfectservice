@@ -75,7 +75,7 @@ class POSController extends Controller
                 'served_by'       => Auth::id(),
             ]);
 
-            // Create items + deduct stock
+            // Create items + deduct stock + record movement
             foreach ($lineItems as $line) {
                 PosSaleItem::create([
                     'pos_sale_id'  => $sale->id,
@@ -86,7 +86,13 @@ class POSController extends Controller
                     'line_total'   => $line['line_total'],
                 ]);
 
-                $line['product']->decrement('stock', $line['quantity']);
+                // Record stock movement (negative = sold)
+                $line['product']->recordMovement(
+                    'sale',
+                    -$line['quantity'],
+                    $sale->receipt_number,
+                    "POS sale"
+                );
             }
 
             return response()->json($sale->load('items', 'servedBy'), 201);

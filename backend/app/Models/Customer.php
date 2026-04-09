@@ -22,4 +22,9 @@ class Customer extends Model
     {
         return $this->hasMany(JobCard::class);
     }
+
+    public function vehicles(): HasMany
+    {
+        return $this->hasMany(CustomerVehicle::class);
+    }
 }
