@@ -14,7 +14,7 @@ export default function AuditLogsPage() {
     const { user } = useAuth();
     const [search, setSearch] = useState('');
 
-    const { data: logsResponse, isLoading } = useQuery({
+    const { data: logsResponse, isLoading, isError } = useQuery({
         queryKey: ['audit-logs', search],
         queryFn: async () => {
             const res = await api.get('/audit-logs', { params: { search } });
@@ -24,8 +24,24 @@ export default function AuditLogsPage() {
 
     const logs = logsResponse?.data || [];
 
+    if (isError) return (
+        <DashboardLayout>
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mb-4">
+                    <History className="w-7 h-7 text-red-400" />
+                </div>
+                <p className="text-gray-900 font-semibold">Failed to load audit logs</p>
+                <p className="text-sm text-gray-400 mt-1">Check your connection and try refreshing the page.</p>
+            </div>
+        </DashboardLayout>
+    );
+
     if (user && user.role !== 'manager') {
-        return <div className="p-8 text-center text-red-500">Access Denied. Manager only.</div>;
+        return (
+            <DashboardLayout>
+                <div className="p-8 text-center text-red-500">Access Denied. Manager only.</div>
+            </DashboardLayout>
+        );
     }
 
     return (

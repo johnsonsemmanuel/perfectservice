@@ -15,7 +15,7 @@ import { TableSkeleton } from '@/components/ui/table-skeleton';
 export default function InvoicesPage() {
     const [search, setSearch] = useState('');
 
-    const { data: invoicesResponse, isLoading } = useQuery({
+    const { data: invoicesResponse, isLoading, isError } = useQuery({
         queryKey: ['invoices', search],
         queryFn: async () => {
             const res = await api.get('/invoices', { params: { search } });
@@ -24,6 +24,18 @@ export default function InvoicesPage() {
     });
 
     const invoices = invoicesResponse?.data || [];
+
+    if (isError) return (
+        <DashboardLayout>
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mb-4">
+                    <Receipt className="w-7 h-7 text-red-400" />
+                </div>
+                <p className="text-gray-900 font-semibold">Failed to load invoices</p>
+                <p className="text-sm text-gray-400 mt-1">Check your connection and try refreshing the page.</p>
+            </div>
+        </DashboardLayout>
+    );
 
     const getStatusBadgeVariant = (status: string) => {
         switch (status) {

@@ -16,7 +16,7 @@ import { TableSkeleton } from '@/components/ui/table-skeleton';
 export default function JobCardsPage() {
     const [search, setSearch] = useState('');
 
-    const { data: jobCardsResponse, isLoading } = useQuery({
+    const { data: jobCardsResponse, isLoading, isError } = useQuery({
         queryKey: ['job-cards', search],
         queryFn: async () => {
             const res = await api.get('/job-cards', { params: { search } });
@@ -25,6 +25,18 @@ export default function JobCardsPage() {
     });
 
     const jobCards = jobCardsResponse?.data || [];
+
+    if (isError) return (
+        <DashboardLayout>
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mb-4">
+                    <ClipboardList className="w-7 h-7 text-red-400" />
+                </div>
+                <p className="text-gray-900 font-semibold">Failed to load job cards</p>
+                <p className="text-sm text-gray-400 mt-1">Check your connection and try refreshing the page.</p>
+            </div>
+        </DashboardLayout>
+    );
 
     return (
         <DashboardLayout>

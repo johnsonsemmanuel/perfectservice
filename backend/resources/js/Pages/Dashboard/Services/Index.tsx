@@ -30,7 +30,7 @@ export default function ServicesPage() {
         description: ''
     });
 
-    const { data: services, isLoading } = useQuery({
+    const { data: services, isLoading, isError } = useQuery({
         queryKey: ['services'],
         queryFn: async () => {
             const res = await api.get('/services');
@@ -73,6 +73,17 @@ export default function ServicesPage() {
         return (
             <DashboardLayout>
                 <TableSkeleton columns={6} rows={10} />
+            </DashboardLayout>
+        );
+    }
+
+    if (isError) {
+        return (
+            <DashboardLayout>
+                <div className="flex flex-col items-center justify-center py-24 text-center">
+                    <p className="text-gray-900 font-semibold">Failed to load services</p>
+                    <p className="text-sm text-gray-400 mt-1">Check your connection and try refreshing.</p>
+                </div>
             </DashboardLayout>
         );
     }

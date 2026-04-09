@@ -27,7 +27,8 @@ use App\Http\Controllers\Api\ProductController;
 */
 
 // ── Public Auth ────────────────────────────────────────────────────
-Route::post('/login', [AuthController::class, 'login']);
+// NOTE: Authentication is session-based via POST /web-login (web.php).
+// The API routes below handle logout and profile for the authenticated session.
 
 // ── Authenticated Routes ───────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {

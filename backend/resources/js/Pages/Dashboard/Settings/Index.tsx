@@ -115,9 +115,9 @@ export default function SettingsPage() {
         formData.append('logo', file);
         setUploading(true);
         try {
-            await api.post('/settings/logo', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            // Do NOT set Content-Type manually — axios sets multipart/form-data
+            // with the correct boundary automatically when passed a FormData object
+            await api.post('/settings/logo', formData);
             queryClient.invalidateQueries({ queryKey: ['settings'] });
             toast('success', 'Logo uploaded successfully');
         } catch (error) {
@@ -192,8 +192,8 @@ export default function SettingsPage() {
                                     <div className="w-24 h-24 bg-white rounded-lg border border-red-100 flex items-center justify-center overflow-hidden relative group">
                                         {settings?.company_logo ? (
                                             <img
-                                                src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${settings.company_logo}`}
-                                                alt="Logo"
+                                                src={settings.company_logo}
+                                                alt="Company Logo"
                                                 className="w-full h-full object-contain p-2"
                                             />
                                         ) : (

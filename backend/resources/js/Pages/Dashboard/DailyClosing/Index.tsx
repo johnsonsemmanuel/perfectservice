@@ -22,7 +22,7 @@ export default function DailyClosingPage() {
     const [note, setNote] = useState('');
     const [error, setError] = useState('');
 
-    const { data: closing, isLoading } = useQuery({
+    const { data: closing, isLoading, isError } = useQuery({
         queryKey: ['daily-closing', 'today'],
         queryFn: async () => {
             const res = await api.get('/daily-closings?date=today');
@@ -67,6 +67,15 @@ export default function DailyClosingPage() {
     };
 
     if (isLoading) return <DashboardLayout><DetailSkeleton /></DashboardLayout>;
+
+    if (isError) return (
+        <DashboardLayout>
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+                <p className="text-gray-900 font-semibold">Failed to load daily closing data</p>
+                <p className="text-sm text-gray-400 mt-1">Check your connection and try refreshing.</p>
+            </div>
+        </DashboardLayout>
+    );
 
     if (!closing) {
         return (

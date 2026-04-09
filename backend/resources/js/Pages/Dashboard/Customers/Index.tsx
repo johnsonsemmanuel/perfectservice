@@ -15,7 +15,6 @@ import { Link } from '@inertiajs/react';
 import { TableSkeleton } from '@/components/ui/table-skeleton';
 
 export default function CustomersPage() {
-    ;
     const queryClient = useQueryClient();
     const [search, setSearch] = useState('');
     const [isCreating, setIsCreating] = useState(false);
@@ -29,7 +28,7 @@ export default function CustomersPage() {
         notes: ''
     });
 
-    const { data: customersData, isLoading } = useQuery({
+    const { data: customersData, isLoading, isError } = useQuery({
         queryKey: ['customers', search],
         queryFn: async () => {
             const res = await api.get('/customers', { params: { search } });
@@ -38,6 +37,18 @@ export default function CustomersPage() {
     });
 
     const customers = customersData?.data || [];
+
+    if (isError) return (
+        <DashboardLayout>
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mb-4">
+                    <Users className="w-7 h-7 text-red-400" />
+                </div>
+                <p className="text-gray-900 font-semibold">Failed to load customers</p>
+                <p className="text-sm text-gray-400 mt-1">Check your connection and try refreshing the page.</p>
+            </div>
+        </DashboardLayout>
+    );
 
     const createCustomer = useMutation({
         mutationFn: async (data: any) => {
