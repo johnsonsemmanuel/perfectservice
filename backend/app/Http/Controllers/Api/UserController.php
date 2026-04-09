@@ -30,11 +30,11 @@ class UserController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
-            'role_id' => 'required|exists:roles,id',
-            'pin' => 'nullable|string|size:4',
+            'name'      => 'required|string|max:255',
+            'email'     => 'required|email|unique:users,email',
+            'password'  => ['required', 'string', 'min:8', 'regex:/[0-9]/'],
+            'role_id'   => 'required|exists:roles,id',
+            'pin'       => 'nullable|string|size:4',
             'is_active' => 'boolean',
         ]);
 
@@ -61,7 +61,7 @@ class UserController extends Controller
                 'email',
                 Rule::unique('users')->ignore($user->id),
             ],
-            'password' => 'nullable|string|min:6',
+            'password'  => ['nullable', 'string', 'min:8', 'regex:/[0-9]/'],
             'role_id' => 'exists:roles,id',
             'pin' => 'nullable|string|size:4',
             'is_active' => 'boolean',

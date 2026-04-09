@@ -3,6 +3,7 @@ import { usePage } from '@inertiajs/react';
 import Sidebar from './Sidebar';
 import TopHeader from './TopHeader';
 import MobileNav from './MobileNav';
+import { SessionTimeoutWarning } from '@/components/ui/SessionTimeoutWarning';
 import type { PageProps } from '@/hooks/useAuth';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -20,6 +21,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </div>
             </main>
             <MobileNav />
+            <SessionTimeoutWarning />
         </div>
     );
 }
